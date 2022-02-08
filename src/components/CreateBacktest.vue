@@ -8,14 +8,14 @@
 
     <v-card>
       <v-card-title>
-        <span class="text-h5">Create Worker</span>
+        <span class="text-h5">Create Backtest</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col cols="12">
               <v-text-field
-                label="Worker Name"
+                label="Backtest Name"
                 v-model="name"
                 hint="example of persistent helper text"
                 required
@@ -24,7 +24,7 @@
             <v-col cols="12">
               <v-select
                 v-model="service"
-                :items="workerServices"
+                :items="backtestService"
                 item-text="name"
                 label="Service"
                 required
@@ -32,35 +32,44 @@
               ></v-select>
             </v-col>
             <v-col cols="12">
-              <v-card-subtitle> Parameters </v-card-subtitle>
+              <v-card-subtitle> Configuration </v-card-subtitle>
             </v-col>
-          <div v-for="parameter, index in parameters" :key="index">
-            <v-row>
-            <v-col cols="12" md="6">
+            <v-col cols="12">
               <v-text-field
-                label="Key"
-                v-model="parameter.name"
+                label="Start Date"
+                v-model="configuration.StartDate"
                 hint="example of persistent helper text"
                 required
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12">
               <v-text-field
-                label="Default Value"
-                v-model="parameter.default_value"
+                label="End Date"
+                v-model="configuration.EndDate"
                 hint="example of persistent helper text"
                 required
-              ></v-text-field
-            ></v-col>
-            </v-row>
-            </div>
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-combobox
+                v-model="configuration.assets"
+                :items="configuration.assets"
+                label="Assets"
+                multiple
+                dense
+              ></v-combobox>
+            </v-col>
+            <v-col cols="12">
+              <v-select
+                v-model="configuration.benchmark"
+                :items="configuration.assets"
+                label="Benchmark"
+              ></v-select>
+            </v-col>
           </v-row>
         </v-container>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="blue darken-1" text @click="addParameter">
-          Add Parameter
-        </v-btn>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="dialog = false">
           Close
@@ -78,8 +87,10 @@ export default {
     this.$store.dispatch("getServices");
   },
   computed: {
-    workerServices() {
-      return this.$store.state.services.filter(service => service.type === "worker");
+    backtestService() {
+      return this.$store.state.services.filter(
+        (service) => service.type === "backtest"
+      );
     },
   },
   data() {
@@ -87,24 +98,36 @@ export default {
       dialog: false,
       el: 1,
       name: "",
-      image: "",
-      service_type: "",
-      parameters: [],
       service: {},
+      configuration: {
+        StartDate: "2016-01-01",
+        EndDate: "2016-12-31",
+        assets: [
+          "AAPL",
+          "SBUX",
+          "MSFT",
+          "CSCO",
+          "QCOM",
+          "FB",
+          "AMZN",
+          "TSLA",
+          "AMD",
+          "ZNGA",
+        ],
+        benchmark: "AAPL",
+        timezone: "utc",
+      },
     };
   },
   methods: {
-    addParameter() {
-      this.parameters.push({"key": "", "default_value": ""})
-    },
     submit() {
-      let worker_data = {
+      let backtest_data = {
         name: this.name,
         service_id: this.service.id,
-        parameters: this.parameters,
+        configuration: this.configuration,
       };
       axios
-        .post("http://localhost:8080/api/v1/workers", worker_data)
+        .post("http://localhost:8080/api/v1/backtests", backtest_data)
         .then((response) => {
           console.log(response);
         })
